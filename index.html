@@ -1,0 +1,152 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <script src="../../tests/jme-runtime.js"></script>
+        <script src="../../tests/locales.js"></script>
+        <script src="graph-theory.js"></script>
+        <style>
+            .log {
+                font-family: monospace;
+            }
+            .log.error {
+                color: red;
+                font-weight: bold;
+            }
+            .drawing {
+                max-width: 20em;
+                border: 1px solid black;
+            }
+        </style>
+    </head>
+    <body>
+        <ul id="tests"></ul>
+
+        <script>
+			Numbas.queueScript('base',[],function() {});
+			Numbas.queueScript('go',['jme','localisation','extensions/graph-theory/graph-theory.js'],function() {
+                Numbas.activateExtension('graph-theory');
+                var gt = Numbas.extensions['graph-theory'];
+                var s = window.scope = new Numbas.jme.Scope([Numbas.jme.builtinScope,gt.scope]);
+                var treeToJME = Numbas.jme.display.treeToJME.bind(Numbas.jme.display);
+
+                function run(expr) {
+                    try {
+                        console.log(`${expr}:\t${Numbas.jme.display.treeToJME({tok:s.evaluate(expr)})}`);
+                    } catch(e) {
+                        console.error(e.message);
+                        console.error(e.stack);
+                    }
+                }
+
+                function element(name,attr,content) {
+                    var e = document.createElement(name);
+                    if(attr) {
+                        for(var x in attr) {
+                            e.setAttribute(x,attr[x]);
+                        }
+                    }
+                    if(content!==undefined) {
+                        e.innerHTML = content;
+                    }
+                    return e;
+                }
+
+                function header(message) {
+                    document.body.appendChild(element('h2',{},message));
+                }
+
+                function log(message,explanation) {
+                    if(explanation) {
+                        document.body.appendChild(element('h3',{},explanation));
+                    }
+                    document.body.appendChild(element('p',{class:'log'},JSON.stringify(message)));
+                }
+                function log_matrix(m) {
+                    element('p',{class:'log'},m.map(l=>l.join('\t')).join('\n'));
+                }
+
+                function show(drawing) {
+                    drawing.classList.add('drawing');
+                    document.body.appendChild(drawing);
+                }
+
+                function show_graph(adjacency,labels) {
+                    show(gt.draw_graph({
+                        vertices: gt.layout_graph(gt.from_adjacency_matrix(adjacency)),
+                        adjacency: adjacency,
+                        labels: labels
+                    }));
+                }
+
+                header("A triangle");
+                const adjacency = [[0,1,1],[1,0,1],[1,1,0]];
+                const graph = gt.from_adjacency_matrix(adjacency);
+                const vertices = gt.layout_graph(graph);
+                const drawing = gt.draw_graph({vertices, adjacency});
+                show(drawing);
+
+                header("Digraph");
+                show_graph([
+                    [0,0.5,1,1,1],
+                    [0.5,0,1,0,0],
+                    [0,0,0,0,0],
+                    [0,0,1,0,0],
+                    [0,0,0,0,0]
+                ]);
+
+                header("Several components");
+                const edges = [[1,2],[1,3],[2,3],[4,5]];
+                const a2 = gt.adjacency_matrix_from_edges(edges);
+                show_graph(a2,[0,1,2,3,4,5]);
+                log(gt.connected_components(a2),'Connected components');
+
+                gt.connected_components(a2).map(c=>show_graph(gt.subgraph(a2,c)));
+
+                header("Largest connected component");
+                const a3 = gt.largest_connected_component(a2,[0,1,2,3,4,5]);
+                show_graph(a3.adjacency,a3.labels);
+
+                header("Random graph");
+                const size = 24;
+                function random_graph(size) {
+                    const m = [];
+                    for(let i=0;i<size;i++) {
+                        const row = [];
+                        m.push(row);
+                        for(let j=0;j<size;j++) {
+                            row.push(0);
+                        }
+                    }
+                    for(let i=0;i<size;i++) {
+                        for(let j=0;j<=i;j++) {
+                            m[i][j] = m[j][i] = Math.random()<(1-i/size) ? 1 : 0;
+                        }
+                    }
+                    m.rows = m.columns = size;
+                    return gt.largest_connected_component(m).adjacency;
+                }
+                const u = gt.graph_union(random_graph(6),random_graph(8),random_graph(3));
+                log(u);
+                show_graph(u);
+
+                header('Cartesian product');
+                const cp = gt.cartesian_product(
+                    gt.adjacency_matrix_from_edges([[0,1],[0,2],[0,3]]), 
+                    gt.adjacency_matrix_from_edges([[0,1],[0,2],[0,3]])
+                );
+                log_matrix(cp);
+                show_graph(cp);
+
+                header('Direct product');
+                const dp = gt.direct_product(
+                    gt.adjacency_matrix_from_edges([[0,1]]), 
+                    gt.adjacency_matrix_from_edges([[0,1],[0,2],[1,2],[2,3],[2,4],[3,4]])
+                );
+                log_matrix(dp);
+                show_graph(dp);
+            });
+        </script>
+    </body>
+</html>
+
