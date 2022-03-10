@@ -2,163 +2,233 @@
 
 This extension provides some functions for working with and drawing graphs in Numbas.
 
+## JME data types
+
+This extension adds three new data types:
+
+### `vertex`
+
+A vertex in a graph. It can be automatically converted to a vector corresponding to its position.
+It also has a label.
+
+### `edge`
+
+An edge linking two vertices, identified by their indices in the graph's list of vertices.
+
+An edge can be _directed_ or not.
+
+Each edge has a _weight_, which is used by the auto-layout routine, and some graph-theoretic algorithms.
+
+An edge can also have a dictionary of _styles_ attached. The recognised styles are:
+
+* `opacity` - A value between 0 and 1. The default is 1.
+* `width` - The width of a line drawn to show the edge. The default is 1.
+* `dash` - Either a boolean, or a string giving an SVG dasharray pattern. The default is `false`.
+
+### `graph`
+
+A graph, consisting of a collection of vertices and edges, and a corresponding adjacency matrix.
+
+The adjacency matrix has one row and one column for each vertex. The entry `(i,j)` contains `1` if vertices `i` and `j` are adjacent, and `0` otherwise.
+
 ## JME functions
 
 Many of these functions take an adjacency matrix as an argument.
 A value of 0 in position `[i][j]` means that there is no edge from vertex `i` to `j`; a positive value means that there is an edge, with any value less than 1 being drawn as a dashed line, and a value of 1 being drawn as a solid line.
 
-### `adjacency_matrix(edges)`
+### `edge(from, to, [weight], [directed], [label], [style])`
 
-Given a list of edges, in the form `[v1,v2]`, where `v1` and `v2` are indices of vertices, produce an adjacency matrix for the graph with those edges and no extra vertices.
+Create an edge linking vertices `from` and `to`. (These indices have no particular meaning without reference to a list of vertices)
 
-### `draw_graph_from_adjacency(adjacency, labels)`
+### `from(edge)`
 
-Given an adjacency matrix and an optional list of string labels for the vertices, produce a drawing of a graph.
+The index of the vertex at the start of the edge.
 
-### `draw_graph(adjacency, vertices, labels)`
+## `to(edge)`
 
-Given an adjacency matrix, a list of vectors giving the positions of the vertices, and an optional list of string labels for the vertices, produce a drawing of a graph.
+The index of the vertex at the end of the edge.
 
-### `layout_graph(adjacency)`
+### `ends(edge)`
 
-Given an adjacency matrix, lay the graph out, trying to separate vertices reasonably and avoid crossing edges.
+A list `[from,to]` giving the indices of the vertices the edge links.
 
-Returns a list of vectors giving the positions of the vertices.
+### `weight(edge)`
 
-### `vertex_degrees(adjacency)`
+The edge's weight.
 
-Given an adjacency matrix, return a list giving the degree of each vertex.
+### `directed(edge)`
 
-### `graph_union(a,b)`
+`true` if the edge is directed, `false` otherwise.
 
-Given adjacency matrices `a` and `b`, return an adjacency matrix representing the union of the two graphs.
+### `label(edge)`
 
-### `cartesian_product(a,b)`
+The edge's label.
 
-Given adjacency matrices `a` and `b`, return an adjacency matrix representing the cartesian product of the two graphs.
+### `vertex(x, y, [label])` or `vertex(pos, [label])`
 
-### `direct_product(a,b)`
+Create a graph vertex with coordinates given by the two numbers `(x,y)` or the vector `pos`, and an optional label string.
 
-Given adjacency matrices `a` and `b`, return an adjacency matrix representing the direct product of the two graphs.
+Vertices can automatically be converted to vectors, so `v[0]` will return the x-coordinate of a vertex `v`.
 
-### `adjacency_permutation(p,m)`
+### `label(vertex)`
 
-Given a permutation `p` (produced by the permutations extension) and an adjacency matrix `m`, return an adjacency matrix representing the graph with the vertices permuted according to `p`.
+The vertex's label.
 
-### `is_graph_isomorphism(p,m)`
+### `graph(adjacency_matrix, [vertices], [edges])` or `graph(edges)` or `graph(vertices, [edges])`
 
-Given a permutation `p` (produced by the permutations extension) and an adjacency matrix `m`, return `true` if `p` is an isomorphism of the graph represented by `m`, and `false` otherwise.
+Create a graph from either:
 
-## JavaScript functions
+* an adjacency matrix and optional lists of vertices and edges
+* just a list of edges
+* a list of vertices and an optional list of edges
 
-All JavaScript functions are available under `Numbas.extensions['graph-theory']`.
+### `adjacency_matrix(graph)`
 
-Many of these functions take an adjacency matrix as an argument.
-An adjacency matrix is a 2D array (an array of arrays), with added integer properties `rows` and `columns` giving the number.
-A value of 0 in position `[i][j]` means that there is no edge from vertex `i` to `j`; a positive value means that there is an edge, with any value less than 1 being drawn as a dashed line, and a value of 1 being drawn as a solid line.
+The graph's adjacency matrix.
 
-### `connected_components(adjacency)`
+### `vertices(graph)`
 
-Given an adjacency matrix, find the connected components.
-Returns a list of components, each represented as a list of the indices of the vertices in that component.
+The graph's list of vertices.
 
-### `is_connected(adjacency)`
+### `edges(graph)`
 
-Return `true` if the graph represented by the given adjacency matrix has a single connected component.
+The graph's list of edges.
 
-### `subgraph(adjacency,vertices)`
+### `set_vertex_positions(graph, positions)`
 
-Given a graph represented by an adjacency matrix, and a list of indices of vertices, return the adjacency matrix of the subgraph containing only those vertices.
+Set the positions of the graph's vertices to the corresponding values in the given list of vectors.
 
-### `largest_connected_component(adjacency, labels)`
+### `set_vertex_labels(graph, labels)`
 
-Given a graph represented as an adjacency matrix, and a list of labels for the vertices, return the largest connected component of the graph and the labels of its vertices.
+Set the labels of the graph's vertices to the corresponding values in the given list of strings.
 
-Returns an object `{adjacency, labels}`.
+### `set_edge_weights(graph, weights)`
 
-*(I'm not sure if this function is needed)*
+Set the weights of the graph's edges to the corresponding values in the given list of numbers.
 
-### `adjacency_matrix_from_edges(edges,directed)`
+### `set_edge_labels(graph, labels)`
 
-Given a list of edges, produce the corresponding adjacency matrix.
+Set the labels of the graph's edges to the corresponding values in the given list of strings.
 
-`edges` is a list of values `[v1,v2]`, where `v1` and `v2` are indices of vertices.
+### `set_edge_styles(graph, styles)`
 
-If `directed` is true, then the adjacency matrix will be made symmetric about its diagonal. 
-So for an undirected edge between vertices `i` and `j`, you only need to include `[i,j]` in `edges`.
+Set the styles of the graph's edges to the corresponding values in the given list of dictionaries.
 
-If `directed` is false, then `[i,j]` and `[j,i]` are different directed edges.
+### `draw(graph)`
 
-### `from_adjacency_matrix(adjacency)`
+Produce a drawing of the graph, as an `html` data type.
+If the graph's vertices haven't been positioned, the vertices are laid out automatically.
 
-Given an adjacency matrix, return lists of vertices and edges, to be used by the cola layout engine.
+Any vertex or edge labels are shown.
 
-Returns an object `{vertices, edges}`.
+### `auto_layout(graph)`
 
-### `draw_graph(graph)`
+Lay out the graph's vertices automatically. The routine tries to ensure that vertices are separated and spaced according to edge weights.
+It doesn't do a good job of ensuring that edges don't cross unnecessarily.
 
-`graph` is an object `{vertices, adjacency, labels}`.
+### `bipartite_layout(graph, lefts)`
 
-* `vertices` is a list of objects `{x,y}`.
-* `adjacency` is an adjacency matrix: 0 means no edge; 1 means an edge; and any number between 0 and 1 means a dashed edge. If there are edges `i` to `j` and `j` to `i`, the edge is drawn as undirected; otherwise if there is just an edge `i` to `j` it is drawn as directed with an arrow.
-* `labels` is a list of string labels for the vertices.
+Lay out the graph as a bipartite graph, with vertices arranged in two vertical rows. The list `lefts` is a list of booleans determining whether the corresponding vertices are on the left or right sides.
 
-Returns an SVG element containing a drawing of the graph.
+### `vertex_degrees(graph)`
 
-### `layout_graph(graph)`
+The degrees of the graph's vertices, as a list of integers.
 
-`graph` is an object `{vertices, edges}`.
+### `g1 + g2`
 
-* `vertices` is a list of objects `{x,y}`.
-* `edges` is a list of objects `{source, target, weight}`, where `source` and `target` are indices of vertices, and `weight` is a scalar controlling how long the edge should be.
+The union of two graphs.
 
-Returns a list of positions for the vertices, as objects `{x,y}`.
+### `graph + vertex`
 
-### `vertex_degrees(adjacency)`
+Add a vertex to a graph.
 
-Given a graph represented as an adjacency matrix, return a list giving the degree of each vertex.
+### `graph + vertices`
 
-### `graph_union(m1, m2, ...)`
+Add a list of vertices to a graph.
 
-Given arbitrarily many adjacency matrices representing graphs, return an adjacency matrix representing the union of those graphs.
+### `graph + edge`
 
-### `cartesian_product(m1, m2, ...)`
+Add an edge to a graph.
 
-Given arbitrarily many adjacency matrices representing graphs, return an adjacency matrix representing the cartesian product of those graphs.
+### `graph + edges`
 
-### `direct_product(m1, m2, ...)`
+Add a list of edges to a graph.
 
-Given arbitrarily many adjacency matrices representing graphs, return an adjacency matrix representing the direct product of those graphs.
+### `connected_components(graph)`
 
-### `adjacency permutation(p,m)`
+The connected components of the given graph, as a list of lists, each giving the indices of the vertices in that component.
 
-Apply the given permutation `p`, represented as a list where `p[i]` gives the image of `i` under `p`, to the vertices of the graph represented by the adjacency matrix `m`.
+### `is_connected(graph)`
 
-Returns an adjacency matrix.
+`true` if the graph has only one connected component.
 
-### `is_graph_isomorphism(p,m)`
+### `largest_connected_component(graph)`
 
-Returns `true` if the permutation `p` is an isomorphism of the graph represented by the adjacency matrix `m`.
+The largest connected component in the given graph, as a list of indices of the vertices in that component.
 
-### `edges_from_weight_matrix(weights)`
+### `subgraph(graph, indices)`
 
-`weights` is a 2D array, where `weights[i][j]` gives the weight of the edge between vertices `i` and `j`, or `-1` if there's no edge.
+The subgraph of the given graph containing only the vertices at the given indices.
 
-Returns a list of edges represented as objects `{from, to, weight}`.
+### `subgraph(graph, edges)`
 
-### `kruskals_algorithm(weights)`
+The subgraph of the given graph, containing only the given edges and the vertices they join.
 
-Find a minimum spanning forest of the graph represented by `weights`, using Kruskal's algorithm.
+### `cartesian_product(graph1, graph2)`
 
-`weights` is a 2D array representing the weights of edges in a graph, which will be passed to `edges_from_weight_matrix` to produce a list of edges.
+The cartesian product of two graphs. A graph with:
 
-Returns a list of edges, each represented by an object `{from, to, weight}`.
+* A vertex for each pair `(a,b)` of vertices, with `a in graph1` and `b in graph2`.
+* An edge between `(a1,b1)` and `(a2,b2)` if and only if `a1=a2` and `b1` is adjacent to `b2` in `graph2`, or `b1=b2` and `a1` is adjacent to `a2` in `graph1`.
 
-### `prims_algorithm(weights)`
+### `direct_product(graph1, graph2)`
 
-Find a minimum spanning tree of the graph represented by `weights`, using Prim's algorithm.
+The direct product, or tensor product, of two graphs. A graph with:
+
+* A vertex for each pair `(a,b)` of vertices, with `a in graph1` and `b in graph2`.
+* An edge between `(a1,b1)` and `(a2,b2)` if and only if `a1` and `a2` are adjacent in `graph1`, and `b1` and `b2` are adjacent in `graph2`.
+
+### `permute_vertices(permutation,graph)`
+
+Permute the vertices of the given graph, returning a new graph.
+
+`permutation` is either a list of numbers or a value from the permutations extension, giving each vertex in the original graph an index in the permuted graph.
+
+The edges in the returned graph follow the permutation, so an edge `(a,b)` in the original graph will be `(p(a), p(b))` in the permuted graph.
+
+### `is_isomorphism(permutation, graph)`
+
+`true` if the given permutation is an isomorphism of the graph: there is an edge `(p(a), p(b))` in the permuted graph if and only if there is an edge `(a,b)` in the original graph.
+
+### `kruskals_algorithm(graph)`
+
+Perform Kruskal's algorithm on the given graph, to return a minimum spanning forest.
+
+### `kruskals_algorithm_working(graph)`
+
+A description of the steps carried out for Kruskal's algorithm on the given graph.
+
+### `prims_algorithm(graph)`
+
+Perform Prim's algorithm on the given graph, to return a minimum spanning tree.
 The graph must be connected.
 
-`weights` is a 2D array representing the weights of edges in a graph, which will be passed to `edges_from_weight_matrix` to produce a list of edges.
+### `prims_algorithm_working(graph)`
 
-Returns a list of edges, each represented by an object `{from, to, weight}`.
+A description of the steps carried out for Prim's algorithm on the given graph.
+
+### `random_planar_graph(n, [p_keep_noncrossing], [p_keep_crossing])`
+
+Generate a random planar graph with `n` vertices.
+
+You can optionally give probabilities for keeping intersecting or non-intersecting edges, which can produce non-planar or non-connected edges.
+
+### `weight_matrix(graph)`
+
+A matrix with one row and one column for each vertex. The entry `(i,j)` contains the weight of the edge from vertex `i` to vertex `j` if there is one, or `-1` otherwise.
+
+### `weight_table(graph)`
+
+An HTML table showing the weights of the edges in the graph.
+
+The entry `(i,j)` contains the weight of the edge from vertex `i` to vertex `j` if there is one, or `-1` otherwise.
