@@ -44,7 +44,7 @@ Create an edge linking vertices `from` and `to`. (These indices have no particul
 
 The index of the vertex at the start of the edge.
 
-## `to(edge)`
+### `to(edge)`
 
 The index of the vertex at the end of the edge.
 
@@ -162,6 +162,10 @@ The connected components of the given graph, as a list of lists, each giving the
 
 `true` if the graph has only one connected component.
 
+### `is_tree(graph)`
+
+`true` if the graph is a tree - it contains no cycles.
+
 ### `largest_connected_component(graph)`
 
 The largest connected component in the given graph, as a list of indices of the vertices in that component.
@@ -204,6 +208,8 @@ The edges in the returned graph follow the permutation, so an edge `(a,b)` in th
 
 Perform Kruskal's algorithm on the given graph, to return a minimum spanning forest.
 
+Returns a list of the edges in the minimum spanning tree.
+
 ### `kruskals_algorithm_working(graph)`
 
 A description of the steps carried out for Kruskal's algorithm on the given graph.
@@ -212,6 +218,8 @@ A description of the steps carried out for Kruskal's algorithm on the given grap
 
 Perform Prim's algorithm on the given graph, to return a minimum spanning tree.
 The graph must be connected.
+
+Returns a list of the edges in the minimum spanning tree.
 
 ### `prims_algorithm_working(graph)`
 
@@ -225,7 +233,7 @@ You can optionally give probabilities for keeping intersecting or non-intersecti
 
 ### `weight_matrix(graph)`
 
-A matrix with one row and one column for each vertex. The entry `(i,j)` contains the weight of the edge from vertex `i` to vertex `j` if there is one, or `-1` otherwise.
+A matrix with one row and one column for each vertex. The entry `(i,j)` contains the weight of the edge from vertex `i` to vertex `j` if there is one, or `0` otherwise.
 
 ### `weight_table(graph)`
 

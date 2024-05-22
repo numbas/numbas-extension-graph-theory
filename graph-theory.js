@@ -1,4 +1,4 @@
-Numbas.addExtension('graph-theory',['jme','jme-display','svgjs'],function(extension) {
+Numbas.addExtension('graph-theory',['jme','jme-display','svgjs','graph-app'],function(extension) {
     const scope = extension.scope;
     var jme = Numbas.jme;
 
@@ -854,7 +854,7 @@ Numbas.addExtension('graph-theory',['jme','jme-display','svgjs'],function(extens
 
         /** Find a minimum spanning forest of a weighted graph, using Kruskal's algorithm.
          *
-         * @returns {Object.<Graph,WorkingOut>} - A copy of this graph with only the edges in the minimum spanning forest.
+         * @returns {Object.<Array.<Edge>,WorkingOut>} - The edges included in the minimum spanning forest.
          */
         annotated_kruskals_algorithm() {
             let {edges, vertices} = this;
@@ -963,21 +963,21 @@ Numbas.addExtension('graph-theory',['jme','jme-display','svgjs'],function(extens
                 no_forest: true,
                 no_graph: true
             });
-            return {graph: this.subgraph_by_edges(out), working: working};
+            return {edges: out, working: working};
         }
 
         /** Find a minimum spanning forest of a weighted graph, using Kruskal's algorithm.
          *
-         * @returns {Graph} - A copy of this graph with only the edges in the minimum spanning forest.
+         * @returns {Array.<Edge>} - The edges included in the minimum spanning forest.
          */
         kruskals_algorithm() {
-            return this.annotated_kruskals_algorithm().graph;
+            return this.annotated_kruskals_algorithm().edges;
         }
 
         /** Find a minimum spanning tree of a weighted graph, using Prim's algorithm.
          *  The graph must be connected.
          *
-         *  @returns {Object.<Graph,WorkingOut>} - A copy of this graph with only the edges in the minimum spanning tree.
+         *  @returns {Object.<Array.<Edge>,WorkingOut>} - The edges included in the minimum spanning tree.
          */
         annotated_prims_algorithm() {
             let {edges, vertices} = this;
@@ -1073,17 +1073,17 @@ Numbas.addExtension('graph-theory',['jme','jme-display','svgjs'],function(extens
                 explanation: 'Every vertex is now connected, so the minimum spanning tree is complete.',
                 no_graph: true
             });
-            return {graph: this.subgraph_by_edges(out), working: working};
+            return {edges: out, working: working};
         }
 
         /** Find a minimum spanning tree of a weighted graph, using Prim's algorithm.
          *  The graph must be connected.
          *
-         *  @returns {Graph} - A copy of this graph with only the edges in the minimum spanning tree.
+         *  @returns {Array.<Edge>} - The edges included in the minimum spanning tree.
          */
         prims_algorithm() {
-            const {graph} = this.annotated_prims_algorithm();
-            return graph;
+            const {edges} = this.annotated_prims_algorithm();
+            return edges;
         }
 
         /** Is this graph a tree (or more precisely, a forest of (directed) acyclic graphs)? 
@@ -1201,6 +1201,7 @@ Numbas.addExtension('graph-theory',['jme','jme-display','svgjs'],function(extens
     var TInt = types.TInt;
     var TNum = types.TNum;
     var TString = types.TString;
+    var TDict = types.TDict;
     var TBool = types.TBool;
 
     var TVertex = extension.TVertex = function(v) {
@@ -1433,12 +1434,12 @@ Numbas.addExtension('graph-theory',['jme','jme-display','svgjs'],function(extens
         return g.largest_connected_component();
     }, {unwrapValues: true}));
 
-    scope.addFunction(new jme.funcObj('subgraph',['graph','list of number'],TList, function(g,verts) {
-        return g.subgraph(verts);
+    scope.addFunction(new jme.funcObj('subgraph',['graph','list of number'],TGraph, function(g,verts) {
+        return new TGraph(g.subgraph(verts));
     }, {unwrapValues: true}));
 
-    scope.addFunction(new jme.funcObj('subgraph',['graph','list of edge'], TList, function(g,edges) {
-        return g.subgraph_by_edges(edges);
+    scope.addFunction(new jme.funcObj('subgraph',['graph','list of edge'], TGraph, function(g,edges) {
+        return new TGraph(g.subgraph_by_edges(edges));
     }, {unwrapValues: true}));
 
     scope.addFunction(new jme.funcObj('cartesian_product',['graph','graph'],TGraph,function(a,b) {
@@ -1465,8 +1466,12 @@ Numbas.addExtension('graph-theory',['jme','jme-display','svgjs'],function(extens
         return g.is_isomorphism(p.to);
     }));
 
-    scope.addFunction(new jme.funcObj('kruskals_algorithm', ['graph'], TGraph, function(g) {
-        return g.kruskals_algorithm();
+    scope.addFunction(new jme.funcObj('is_tree',['graph'], TBool, function(g) {
+        return g.is_tree();
+    }));
+
+    scope.addFunction(new jme.funcObj('kruskals_algorithm', ['graph'], TList, function(g) {
+        return g.kruskals_algorithm().map(e => new TEdge(e));
     }));
 
     scope.addFunction(new jme.funcObj('kruskals_algorithm_working', ['graph'], THTML, function(g) {
@@ -1474,8 +1479,8 @@ Numbas.addExtension('graph-theory',['jme','jme-display','svgjs'],function(extens
         return working.render();
     }));
 
-    scope.addFunction(new jme.funcObj('prims_algorithm', ['graph'], TGraph, function(g) {
-        return g.prims_algorithm();
+    scope.addFunction(new jme.funcObj('prims_algorithm', ['graph'], TList, function(g) {
+        return g.prims_algorithm().map(e => new TEdge(e));
     }));
 
     scope.addFunction(new jme.funcObj('prims_algorithm_working', ['graph'], THTML, function(g) {
@@ -1486,12 +1491,122 @@ Numbas.addExtension('graph-theory',['jme','jme-display','svgjs'],function(extens
     scope.addFunction(new jme.funcObj('random_planar_graph', ['number', '[number]', '[number]'], TGraph, random_planar_graph));
 
     scope.addFunction(new jme.funcObj('weight_matrix', ['graph'], TMatrix, function(g) {
-        const weight_matrix = g.weight_matrix;
-        weight_matrix.forEach(row => row.map((c,i) => c===null ? -1 : c));
-        return weight_matrix;
+        const weight_matrix = g.weight_matrix();
+        const out = weight_matrix.map(row => row.map(c => c===null ? 0 : c));
+        out.rows = weight_matrix.rows;
+        out.columns = weight_matrix.columns;
+        return out;
     }));
 
     scope.addFunction(new jme.funcObj('weight_table', ['graph'], THTML, function(g) {
         return g.weight_table();
     }));
+
+    scope.addFunction(new jme.funcObj('graph_app', ['string'], THTML, function(scene) {
+        const g = document.createElement('graph-app')
+        g.setAttribute('baseurl', Numbas.getStandaloneFileURL('graph-theory',''));
+        g.setAttribute('scene',scene);
+        return g;
+    }));
+
+    function graph_app_set_scene(g,graph) {
+        const scene = {
+            points: graph.vertices.map(p => { return {x:p.x, y:p.y}; }),
+            edges: graph.edges.map(e => { return [e.from, e.to]; })
+        };
+        g.set_scene(scene);
+    }
+
+    function graph_app_scene_to_graph(scene) {
+        const g = new Graph([]);
+        g.vertices = scene.points.map(p => { return new Vertex(p.x,p.y); });
+        g.edges = scene.edges.map(e => { return new Edge(e.from,e.to); });
+        return g;
+    }
+
+    scope.addFunction(new jme.funcObj('graph_app', [TGraph,'[string]'], THTML, function(graph,mode) {
+        const g = document.createElement('graph-app')
+        g.setAttribute('baseurl', Numbas.getStandaloneFileURL('graph-theory',''));
+        mode = mode || 'play movethings';
+        g.setAttribute('mode',mode);
+        graph_app_set_scene(g,graph);
+        return g;
+    }));
+
+    class GraphEditor {
+        constructor(element, part, title, events, answer_changed, options) {
+            this.part = part;
+            this.title = title;
+            this.events = events;
+            this.answer_changed = answer_changed;
+            this.options = options;
+
+            this.setting_value = false;
+
+            const g = this.app = document.createElement('graph-app');
+            g.setAttribute('baseurl', Numbas.getStandaloneFileURL('graph-theory',''));
+            g.setAttribute('mode',options.mode);
+            g.addEventListener('statechanged', e => {
+                if(this.setting_value) {
+                    return;
+                }
+                this.setting_value = true;
+                this.answer_changed({valid: true, value: graph_app_scene_to_graph(e.detail.scene)});
+                this.setting_value = false;
+            });
+            graph_app_set_scene(g,options.graph);
+            element.appendChild(g);
+        }
+
+        setAnswerJSON(answerJSON) {
+            this.setting_value = true;
+            this.setting_value = false;
+        }
+        
+        disable() {
+            this.app.setAttribute('disabled',true);
+        }
+
+        enable() {
+            this.app.removeAttribute('disabled');
+        }
+    }
+
+    Numbas.answer_widgets.register_custom_widget({
+        name: 'graph-editor',
+        niceName: 'Graph editor',
+        widget: GraphEditor,
+        signature: 'graph',
+        answer_to_jme: function(answer) {
+            return new TGraph(answer);
+        },
+        options_definition: [
+            {
+                name: 'graph',
+                label: 'Initial graph',
+                input_type: 'jme',
+                default_value: ''
+            },
+            {
+                name: 'mode',
+                label: 'Mode',
+                input_type: 'dropdown',
+                data: {
+                    choices: [
+                        {value: 'edit movethings', label: 'Editing'},
+                        {value: 'play movethings', label: 'Move vertices'},
+                        {value: 'play hamilton', label: 'Make a Hamiltonian cycle'},
+                        {value: 'play euler', label: 'Make an Eulerian cycle'}
+                    ]
+                },
+                default_value: 'play movethings'
+            }
+        ],
+        scorm_storage: {
+            interaction_type: function(part) { return 'fill-in'; },
+            correct_answer: function(part) { return part.input_options().correctAnswer; },
+            student_answer: function(part) { return part.studentAnswer; },
+            load: function(part, data) { return data.answer; }
+        }
+    });
 });

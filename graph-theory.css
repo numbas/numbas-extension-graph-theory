@@ -50,3 +50,14 @@
 .working-out table {
     margin: 0 auto;
 }
+
+graph-app {
+    width: 100%;
+    max-width: 90vw;
+    max-height: 80vh;
+    border: 1px solid;
+    box-sizing: content-box;
+}
+.answer-widget graph-app {
+    height: 80vh;
+}

@@ -4,6 +4,7 @@
         <meta charset="utf-8">
         <script src="../../tests/jme-runtime.js"></script>
         <script src="../../tests/locales.js"></script>
+        <script src="svg.js"></script>
         <script src="graph-theory.js"></script>
         <link rel="stylesheet" href="graph-theory.css">
         <style>
@@ -19,7 +20,6 @@
     border: 1px solid black;
 }
         </style>
-        <script src="test.js" defer></script>
     </head>
     <body>
 <script>
@@ -233,7 +233,7 @@ Numbas.queueScript('go',['jme','localisation','extensions/graph-theory/graph-the
         g.adjacency_matrix.rows = g.vertices.length;
         g.adjacency_matrix.columns = g.vertices.length;
         const r = g.annotated_prims_algorithm();
-        const mst = r.graph;
+        const mst = g.subgraph_by_edges(r.edges);
         this.show_graph(mst);
         this.log(mst.is_tree(),'mst is tree?');
 
@@ -254,7 +254,7 @@ Numbas.queueScript('go',['jme','localisation','extensions/graph-theory/graph-the
     section('Prim in JME', function() {
         const g = this.evaluate('set_vertex_labels(auto_layout(random_planar_graph(7,1,0.5)),map(upper(letterordinal(i)),i,0..12))');
         this.show_graph(g.value);
-        const unweighted_mst = this.evaluate('prims_algorithm(g)',{g:g});
+        const unweighted_mst = this.evaluate('subgraph(g,prims_algorithm(g))',{g:g});
         this.show_graph(unweighted_mst.value);
         const weighted_g = this.evaluate(`
     let(vertices, vertices(g),
@@ -263,9 +263,9 @@ Numbas.queueScript('go',['jme','localisation','extensions/graph-theory/graph-the
     )
         `,{g:g});
         console.log(weighted_g);
-        const mst = this.evaluate('prims_algorithm(g)',{g:weighted_g});
+        const mst = this.evaluate('subgraph(g,prims_algorithm(g))',{g:weighted_g});
         this.show_graph(mst.value);
-        const kruskal = this.evaluate('kruskals_algorithm(g)',{g:weighted_g});
+        const kruskal = this.evaluate('subgraph(g,kruskals_algorithm(g))',{g:weighted_g});
         this.show_graph(kruskal.value);
 
         this.show(this.evaluate('prims_algorithm_working(set_edge_labels(g,[]))',{g:weighted_g}).value[0]);
