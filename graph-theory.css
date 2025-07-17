@@ -58,6 +58,3 @@ graph-app {
     border: 1px solid;
     box-sizing: content-box;
 }
-.answer-widget graph-app {
-    height: 80vh;
-}
