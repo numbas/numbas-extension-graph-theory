@@ -2,6 +2,11 @@ Numbas.addExtension('graph-theory',['jme','jme-display','svgjs','graph-app'],fun
     const scope = extension.scope;
     var jme = Numbas.jme;
 
+    function addFunction(name, signature, outtype, fn, options) {
+        options = Object.assign({random: false}, options || {});
+        return extension.scope.addFunction(new jme.funcObj(name, signature, outtype, fn, options));
+    }
+
     class WorkingOut {
         constructor(num_columns, add_step_cb, render_cb) {
             this.steps = [];
@@ -1273,241 +1278,241 @@ Numbas.addExtension('graph-theory',['jme','jme-display','svgjs','graph-app'],fun
         return a.value.eq(b.value);
     };
 
-    scope.addFunction(new jme.funcObj('edge', ['number','number','[number]','[boolean]','[string]','[dict]'], TEdge, function(from,to,weight,directed,label,style) {
+    addFunction('edge', ['number','number','[number]','[boolean]','[string]','[dict]'], TEdge, function(from,to,weight,directed,label,style) {
         return new Edge(from,to,weight,directed,label,style);
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('from', ['edge'], TInt, function(e) {
+    addFunction('from', ['edge'], TInt, function(e) {
         return e.from;
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('to', ['edge'], TInt, function(e) {
+    addFunction('to', ['edge'], TInt, function(e) {
         return e.to;
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('weight', ['edge'], TNum, function(e) {
+    addFunction('weight', ['edge'], TNum, function(e) {
         return e.weight;
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('directed', ['edge'], TBool, function(e) {
+    addFunction('directed', ['edge'], TBool, function(e) {
         return e.directed;
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('label', ['edge'], TString, function(e) {
+    addFunction('label', ['edge'], TString, function(e) {
         return e.label;
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('ends', ['edge'], TList, function(e) {
+    addFunction('ends', ['edge'], TList, function(e) {
         return [e.from, e.to];
-    },{unwrapValues: true}));
+    },{unwrapValues: true});
 
-    scope.addFunction(new jme.funcObj('vertex', ['number','number','[string]'], TVertex, function(x,y,label) {
+    addFunction('vertex', ['number','number','[string]'], TVertex, function(x,y,label) {
         return new Vertex(x,y,label);
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('vertex', ['vector','[string]'], TVertex, function(pos,label) {
+    addFunction('vertex', ['vector','[string]'], TVertex, function(pos,label) {
         return new Vertex(pos[0],pos[1],label);
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('label', ['vertex'], TString, function(v) {
+    addFunction('label', ['vertex'], TString, function(v) {
         return v.label;
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('graph', ['matrix','[list of vertex]', '[list of edge]'], TGraph, function(adjacency_matrix, vertices, edges) {
+    addFunction('graph', ['matrix','[list of vertex]', '[list of edge]'], TGraph, function(adjacency_matrix, vertices, edges) {
         const g = new Graph(adjacency_matrix,vertices,edges);
         if(vertices===undefined) {
             g.auto_layout();
         }
         return new TGraph(g);
-    },{unwrapValues: true}));
+    },{unwrapValues: true});
 
-    scope.addFunction(new jme.funcObj('graph',['list of edge'], TGraph, function(edges) {
+    addFunction('graph',['list of edge'], TGraph, function(edges) {
         const g = Graph.from_edges(edges);
         g.auto_layout();
         return new TGraph(g);
-    },{unwrapValues: true}));
+    },{unwrapValues: true});
 
-    scope.addFunction(new jme.funcObj('graph',['list of vertex','[list of edge]'], TGraph, function(vertices, edges) {
+    addFunction('graph',['list of vertex','[list of edge]'], TGraph, function(vertices, edges) {
         const g = Graph.from_edges(edges || []);
         g.vertices = vertices;
         return new TGraph(g);
-    },{unwrapValues: true}));
+    },{unwrapValues: true});
 
-    scope.addFunction(new jme.funcObj('adjacency_matrix',['graph'],TMatrix,function(g) {
+    addFunction('adjacency_matrix',['graph'],TMatrix,function(g) {
         return g.adjacency_matrix;
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('vertices',['graph'],TList,function(g) {
+    addFunction('vertices',['graph'],TList,function(g) {
         return g.vertices.map(v=>new TVertex(v));
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('edges',['graph'],TList,function(g) {
+    addFunction('edges',['graph'],TList,function(g) {
         return g.edges.map(v=>new TEdge(v));
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('set_vertex_positions',['graph','list of vector'],TGraph,function(g,positions) {
+    addFunction('set_vertex_positions',['graph','list of vector'],TGraph,function(g,positions) {
         g = g.copy();
         return new TGraph(g.set_vertex_positions(positions.map(([x,y])=>{ return {x,y} })));
-    },{unwrapValues: true}));
+    },{unwrapValues: true});
 
-    scope.addFunction(new jme.funcObj('set_vertex_labels',['graph','list of string'],TGraph,function(g,labels) {
+    addFunction('set_vertex_labels',['graph','list of string'],TGraph,function(g,labels) {
         g = g.copy();
         return new TGraph(g.set_vertex_labels(labels));
-    },{unwrapValues: true}));
+    },{unwrapValues: true});
 
-    scope.addFunction(new jme.funcObj('set_edge_weights', ['graph','list of number'], TGraph, function(g,weights) {
+    addFunction('set_edge_weights', ['graph','list of number'], TGraph, function(g,weights) {
         g = g.copy();
         return new TGraph(g.set_edge_weights(weights));
-    }, {unwrapValues: true}));
+    }, {unwrapValues: true});
 
-    scope.addFunction(new jme.funcObj('set_edge_labels',['graph','list of string'],TGraph,function(g,labels) {
+    addFunction('set_edge_labels',['graph','list of string'],TGraph,function(g,labels) {
         g = g.copy();
         return new TGraph(g.set_edge_labels(labels));
-    },{unwrapValues: true}));
+    },{unwrapValues: true});
 
-    scope.addFunction(new jme.funcObj('set_edge_styles',['graph','list of dict'],TGraph,function(g,styles) {
+    addFunction('set_edge_styles',['graph','list of dict'],TGraph,function(g,styles) {
         g = g.copy();
         return new TGraph(g.set_edge_styles(styles));
-    },{unwrapValues: true}));
+    },{unwrapValues: true});
 
-    scope.addFunction(new jme.funcObj('draw',['graph'],THTML,function(g) {
+    addFunction('draw',['graph'],THTML,function(g) {
         return g.draw();
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('auto_layout',['graph'],TGraph,function(g) {
+    addFunction('auto_layout',['graph'],TGraph,function(g) {
         g = g.copy();
         g.auto_layout();
         return g;
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('bipartite_layout',['graph','list of boolean'],TList,function(g,left) {
+    addFunction('bipartite_layout',['graph','list of boolean'],TList,function(g,left) {
         g = g.copy();
         g.bipartite_layout(left);
         return new TGraph(g);
-    },{unwrapValues: true}));
+    },{unwrapValues: true});
 
-    scope.addFunction(new jme.funcObj('vertex_degrees',['graph'],TList,function(g) {
+    addFunction('vertex_degrees',['graph'],TList,function(g) {
         return g.vertex_degrees();
-    },{unwrapValues: true}));
+    },{unwrapValues: true});
 
-    scope.addFunction(new jme.funcObj('+',['graph','graph'],TGraph,function(a,b) {
+    addFunction('+',['graph','graph'],TGraph,function(a,b) {
         return Graph.union(a,b);
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('+',['graph','vertex'],TGraph,function(g,v) {
+    addFunction('+',['graph','vertex'],TGraph,function(g,v) {
         g = g.copy();
         g.add_vertex(v);
         return g;
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('+',['graph','list of vertex'],TGraph,function(g,vertices) {
+    addFunction('+',['graph','list of vertex'],TGraph,function(g,vertices) {
         g = g.copy();
         for(let v of vertices) {
             g.add_vertex(v);
         }
         return new TGraph(g);
-    },{unwrapValues: true}));
+    },{unwrapValues: true});
 
-    scope.addFunction(new jme.funcObj('+',['graph','edge'],TGraph,function(g,e) {
+    addFunction('+',['graph','edge'],TGraph,function(g,e) {
         g = g.copy();
         g.add_edge(e);
         return g;
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('+',['graph','list of edge'],TGraph,function(g,edges) {
+    addFunction('+',['graph','list of edge'],TGraph,function(g,edges) {
         g = g.copy();
         for(let e of edges) {
             g.add_edge(e);
         }            
         return new TGraph(g);
-    },{unwrapValues: true}));
+    },{unwrapValues: true});
 
-    scope.addFunction(new jme.funcObj('connected_components',['graph'],TList, function(g) {
+    addFunction('connected_components',['graph'],TList, function(g) {
         return g.connected_components();
-    }, {unwrapValues: true}));
+    }, {unwrapValues: true});
 
-    scope.addFunction(new jme.funcObj('is_connected',['graph'],TBool, function(g) {
+    addFunction('is_connected',['graph'],TBool, function(g) {
         return g.is_connected();
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('largest_connected_component',['graph'],TList, function(g) {
+    addFunction('largest_connected_component',['graph'],TList, function(g) {
         return g.largest_connected_component();
-    }, {unwrapValues: true}));
+    }, {unwrapValues: true});
 
-    scope.addFunction(new jme.funcObj('subgraph',['graph','list of number'],TGraph, function(g,verts) {
+    addFunction('subgraph',['graph','list of number'],TGraph, function(g,verts) {
         return new TGraph(g.subgraph(verts));
-    }, {unwrapValues: true}));
+    }, {unwrapValues: true});
 
-    scope.addFunction(new jme.funcObj('subgraph',['graph','list of edge'], TGraph, function(g,edges) {
+    addFunction('subgraph',['graph','list of edge'], TGraph, function(g,edges) {
         return new TGraph(g.subgraph_by_edges(edges));
-    }, {unwrapValues: true}));
+    }, {unwrapValues: true});
 
-    scope.addFunction(new jme.funcObj('cartesian_product',['graph','graph'],TGraph,function(a,b) {
+    addFunction('cartesian_product',['graph','graph'],TGraph,function(a,b) {
         return Graph.cartesian_product(a,b);
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('direct_product',['graph','graph'], TGraph, function(a,b) {
+    addFunction('direct_product',['graph','graph'], TGraph, function(a,b) {
         return Graph.direct_product(a,b);
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('permute_vertices',['list of number','graph'], TGraph, function(p,g) {
+    addFunction('permute_vertices',['list of number','graph'], TGraph, function(p,g) {
         return new TGraph(g.permute_vertices(p));
-    },{unwrapValues:true}));
+    },{unwrapValues:true});
 
-    scope.addFunction(new jme.funcObj('permute_vertices',['permutation','graph'], TGraph, function(p,g) {
+    addFunction('permute_vertices',['permutation','graph'], TGraph, function(p,g) {
         return g.permute_vertices(p.to);
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('is_isomorphism',['list of number','graph'], TBool, function(p,g) {
+    addFunction('is_isomorphism',['list of number','graph'], TBool, function(p,g) {
         return g.is_isomorphism(p);
-    },{unwrapValues: true}));
+    },{unwrapValues: true});
 
-    scope.addFunction(new jme.funcObj('is_isomorphism',['permutation','graph'], TBool, function(p,g) {
+    addFunction('is_isomorphism',['permutation','graph'], TBool, function(p,g) {
         return g.is_isomorphism(p.to);
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('is_tree',['graph'], TBool, function(g) {
+    addFunction('is_tree',['graph'], TBool, function(g) {
         return g.is_tree();
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('kruskals_algorithm', ['graph'], TList, function(g) {
+    addFunction('kruskals_algorithm', ['graph'], TList, function(g) {
         return g.kruskals_algorithm().map(e => new TEdge(e));
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('kruskals_algorithm_working', ['graph'], THTML, function(g) {
+    addFunction('kruskals_algorithm_working', ['graph'], THTML, function(g) {
         const {working} = g.annotated_kruskals_algorithm();
         return working.render();
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('prims_algorithm', ['graph'], TList, function(g) {
+    addFunction('prims_algorithm', ['graph'], TList, function(g) {
         return g.prims_algorithm().map(e => new TEdge(e));
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('prims_algorithm_working', ['graph'], THTML, function(g) {
+    addFunction('prims_algorithm_working', ['graph'], THTML, function(g) {
         const {working} = g.annotated_prims_algorithm();
         return working.render();
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('random_planar_graph', ['number', '[number]', '[number]'], TGraph, random_planar_graph));
+    addFunction('random_planar_graph', ['number', '[number]', '[number]'], TGraph, random_planar_graph, {random: true});
 
-    scope.addFunction(new jme.funcObj('weight_matrix', ['graph'], TMatrix, function(g) {
+    addFunction('weight_matrix', ['graph'], TMatrix, function(g) {
         const weight_matrix = g.weight_matrix();
         const out = weight_matrix.map(row => row.map(c => c===null ? 0 : c));
         out.rows = weight_matrix.rows;
         out.columns = weight_matrix.columns;
         return out;
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('weight_table', ['graph'], THTML, function(g) {
+    addFunction('weight_table', ['graph'], THTML, function(g) {
         return g.weight_table();
-    }));
+    });
 
-    scope.addFunction(new jme.funcObj('graph_app', ['string'], THTML, function(scene) {
+    addFunction('graph_app', ['string'], THTML, function(scene) {
         const g = document.createElement('graph-app')
         g.setAttribute('baseurl', Numbas.getStandaloneFileURL('graph-theory',''));
         g.setAttribute('scene',scene);
         return g;
-    }));
+    });
 
     function graph_app_set_scene(g,graph) {
         const scene = {
@@ -1524,14 +1529,14 @@ Numbas.addExtension('graph-theory',['jme','jme-display','svgjs','graph-app'],fun
         return g;
     }
 
-    scope.addFunction(new jme.funcObj('graph_app', [TGraph,'[string]'], THTML, function(graph,mode) {
+    addFunction('graph_app', [TGraph,'[string]'], THTML, function(graph,mode) {
         const g = document.createElement('graph-app')
         g.setAttribute('baseurl', Numbas.getStandaloneFileURL('graph-theory',''));
         mode = mode || 'play movethings';
         g.setAttribute('mode',mode);
         graph_app_set_scene(g,graph);
         return g;
-    }));
+    });
 
     class GraphEditor {
         constructor(element, part, title, events, answer_changed, options) {
@@ -1572,7 +1577,7 @@ Numbas.addExtension('graph-theory',['jme','jme-display','svgjs','graph-app'],fun
         }
     }
 
-    Numbas.answer_widgets.register_custom_widget({
+    Numbas.answer_widgets && Numbas.answer_widgets.register_custom_widget({
         name: 'graph-editor',
         niceName: 'Graph editor',
         widget: GraphEditor,

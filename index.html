@@ -5,6 +5,7 @@
         <script src="../../tests/jme-runtime.js"></script>
         <script src="../../tests/locales.js"></script>
         <script src="svg.js"></script>
+        <script src="graph-app.js"></script>
         <script src="graph-theory.js"></script>
         <link rel="stylesheet" href="graph-theory.css">
         <style>
@@ -24,7 +25,8 @@
     <body>
 <script>
 Numbas.queueScript('base',[],function() {});
-Numbas.queueScript('go',['jme','localisation','extensions/graph-theory/graph-theory.js'],function() {
+Numbas.queueScript('go',['jme','extensions/graph-theory/graph-theory.js'],function() {
+    Numbas.locale.init();
     Numbas.activateExtension('graph-theory');
     var gt = window.gt = Numbas.extensions['graph-theory'];
     var s = window.scope = new Numbas.jme.Scope([Numbas.jme.builtinScope,gt.scope]);
@@ -129,13 +131,12 @@ Numbas.queueScript('go',['jme','localisation','extensions/graph-theory/graph-the
 
     function section(name,cb) {
         const s = new Section(name,cb);
-        //s.render();
+        s.render();
     }
 
     section("A triangle", function() {
         const adjacency = [[0,1,1],[1,0,1],[1,1,0]];
         const graph = new gt.Graph(adjacency);
-        console.log(graph);
         graph.set_edge_labels(['a']);
         graph.auto_layout();   
         this.show_graph(graph);
@@ -187,7 +188,6 @@ Numbas.queueScript('go',['jme','localisation','extensions/graph-theory/graph-the
         g2.auto_layout();
         this.show_graph(g2);
         const cp = gt.Graph.cartesian_product(g1,g2);
-        console.log(cp);
         cp.auto_layout();
         this.show_graph(cp);
         this.log_matrix(cp.adjacency_matrix);
@@ -201,7 +201,6 @@ Numbas.queueScript('go',['jme','localisation','extensions/graph-theory/graph-the
         g2.auto_layout();
         this.show_graph(g2);
         const dp = gt.Graph.direct_product(g1,g2);
-        console.log(dp);
         dp.auto_layout();
         this.show_graph(dp);
         this.log_matrix(dp.adjacency_matrix);
@@ -262,7 +261,6 @@ Numbas.queueScript('go',['jme','localisation','extensions/graph-theory/graph-the
         set_edge_labels(set_edge_weights(g,weights),map(string(x),x,weights))
     )
         `,{g:g});
-        console.log(weighted_g);
         const mst = this.evaluate('subgraph(g,prims_algorithm(g))',{g:weighted_g});
         this.show_graph(mst.value);
         const kruskal = this.evaluate('subgraph(g,kruskals_algorithm(g))',{g:weighted_g});
@@ -289,7 +287,7 @@ Numbas.queueScript('go',['jme','localisation','extensions/graph-theory/graph-the
         g.adjacency_matrix.rows = g.vertices.length;
         g.adjacency_matrix.columns = g.vertices.length;
         const r = g.annotated_kruskals_algorithm();
-        const mst = r.graph;
+        const mst = gt.Graph.from_edges(r.edges);
         this.show_graph(mst);
         this.log(mst.is_tree(),'mst is tree?');
 
@@ -300,7 +298,6 @@ Numbas.queueScript('go',['jme','localisation','extensions/graph-theory/graph-the
     section('Is tree', function() {
         const g = gt.Graph.from_edges([[0,1],[0,2],[1,3],[2,3]].map(([from,to])=>new gt.Edge(from,to,1,true)));
         g.auto_layout();
-        console.log(g);
         this.show_graph(g);
         this.log(g.is_tree(),'is tree');
     });
